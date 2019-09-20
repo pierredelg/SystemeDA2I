@@ -1,0 +1,10 @@
+#!/bin/bash
+
+echo "Entrez oui ou non :"
+
+reponse=$(read)
+
+while test(reponse = oui) || test(reponse = non)
+do
+    reponse=$(read);
+done
