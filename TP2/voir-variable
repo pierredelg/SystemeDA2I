@@ -1,0 +1,8 @@
+#!/bin/bash
+while [ "$reponse" != "FINI" ]
+do
+	echo "Entrez le nom de la variable"
+    read reponse 
+    eval echo \$$reponse   #echo ${!reponse}
+    
+done

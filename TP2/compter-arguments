@@ -1,0 +1,9 @@
+#!/bin/bash
+i=1
+
+for argument in "$@"
+do
+	echo "L'argument $i est $argument"
+	i=$(($i + 1))
+
+done
