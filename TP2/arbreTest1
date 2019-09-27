@@ -1,0 +1,32 @@
+#!/bin/bash
+
+chemin=$1
+
+verifDossier(){
+	echo $(eval ls -la $1)
+	echo $(echo $(eval ls -la $1 | cut -c1 ))
+	if [[ $(echo $(eval ls -l $1 | cut -c1 )) == d ]]
+	then
+		echo dossier
+	fi 
+}
+
+listeFichier=$(ls -a $chemin)
+
+listeSansFichierCache=$(echo $listeFichier | cut -c6-)
+
+echo $listeSansFichierCache
+
+for fichier in $listeSansFichierCache
+do
+	echo $(verifDossier $fichier)
+
+	# if [[ $(verifDossier $fichier) == 1 ]]
+	# then
+	# 	echo $0
+	# 	echo $fichier 
+	# 	eval $0 $fichier
+ # 	else
+	# 	echo $fichier
+	# fi
+done

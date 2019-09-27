@@ -1,6 +1,15 @@
 #!/bin/bash
 
-while $(ls -lA $1) 
-do
-	echo 
-done
+list(){
+
+    for file in $1/*
+    do
+        if [ -d $file ]
+        then
+            echo $file
+            list $file
+        else
+            echo $file
+        fi
+    done
+}   
