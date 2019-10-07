@@ -1,0 +1,116 @@
+#!/bin/bash
+
+delimiteur=";"
+
+if(($# != 0))
+then
+	if(($1 == "-d"))
+	then
+		delimiteur=$2
+	fi
+
+	if(($1 == "-s"))
+	then
+		echo trie avec numero de colonne
+		numColonneTrie=$2
+	fi
+
+	if(($1 == "-S"))
+	then
+		echo trie avec nom
+		nomColonneTrie=$2
+	fi
+fi
+
+
+#On donne le fichier de sortie html
+nomFichier=fichierHtml.html
+
+#On compte le nombre de lignes dans le fichier d'entrée
+nombreDeLigne=$(wc -l bieres.csv | cut -d " " -f1)
+
+#On ajoute la structure html 
+echo "<!doctype html>" > $nomFichier
+echo "<html lang=\"fr\">" >> $nomFichier
+echo "<head>" >> $nomFichier
+echo "<meta charset=\"utf-8\">" >> $nomFichier
+echo "<title>csv to html</title>" >> $nomFichier
+echo "</head>" >> $nomFichier
+echo "<body>" >> $nomFichier
+echo "<table>" >> $nomFichier
+
+#On ajoute le CSS
+echo "<style>" >> $nomFichier
+echo "table {" >> $nomFichier
+echo "border: medium solid #000000;" >> $nomFichier
+echo "width: 50%;" >> $nomFichier
+echo "}" >> $nomFichier
+echo "td, th {" >> $nomFichier
+echo "border: thin solid #6495ed;" >> $nomFichier
+echo "width: 50%;" >> $nomFichier
+echo "}" >> $nomFichier
+echo "</style>" >> $nomFichier
+
+#On compte le nombre de colonne
+nombreColonne=$(cat bieres.csv | head -n 1 | grep $delimiteur -o | wc -l)
+
+
+numLigne=1
+
+# Pour chaque lignes
+while (($nombreDeLigne > 0))
+do
+	#Si c'est la premiere ligne on crée un titre de tableau
+	#Sinon c'est une ligne classique
+	if ((numLigne == 1))
+	then 
+		echo "<thead><tr>" >> $nomFichier
+	else
+		echo "<tr>" >> $nomFichier
+	fi
+
+	#Pour chaque colonne on ajoute la colonne
+	for (( numColonne=1 ; $numColonne < $nombreColonne; numColonne++)) 
+		do
+			#Si c'est la premiere ligne c'est une ligne d'entete
+			#Sinon c'est une ligne classique
+			if ((numLigne == 1))
+			then
+				echo "<th>" >> $nomFichier
+			else
+				echo "<td>" >> $nomFichier
+			fi
+
+			#On ajoute la colonne
+			cat bieres.csv | cut -d $delimiteur -f $numColonne | head -n $numLigne | tail -n 1 >> $nomFichier
+
+			# On ajoute la balise de fin de colonne
+			if (($numLigne == 1))
+			then
+				echo "</th>" >> $nomFichier
+			else
+				echo "</td>" >> $nomFichier
+
+			fi
+		done
+	#On ajoute la balise de fin de ligne
+	if ((numLigne == 1))
+	then 
+		echo "</tr></thead>" >> $nomFichier
+	else
+		echo "</tr>" >> $nomFichier
+	fi
+
+	#On augmente le numero de ligne
+	((numLigne++))
+	#On diminue le nombre de ligne
+	((nombreDeLigne--))
+done
+
+#On ajoute les balises de fin de fichier
+echo "</table>" >> $nomFichier
+echo "</body>" >> $nomFichier
+echo "</html>" >> $nomFichier
+
+
+
