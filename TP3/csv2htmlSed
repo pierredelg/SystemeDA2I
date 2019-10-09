@@ -4,35 +4,25 @@ nomFichierEntrant=bieres.csv
 nomFichierSortant=bieres.html
 delimiteur=';'
 
-if(($# != 0))
-then
-	if(($1 == '-d'))
-	then
-		delimiteur=$2
-		shift
-		shift
-	fi
+while getopts "d:s:S:" option
+do
+    case $option in
+        d)	
+			delimiteur=${OPTARG}
+			;;
+		s)
+			trie="| sort -t $delimiteur -k ${OPTARG} "
+			;;
+		S)
+			trie="| sort -t $delimiteur -k $(sed -n 1p bieres.csv | tr ";" "\n" | grep -in ${OPTARG} | cut -d : -f1  | head -n 1)"
+			;;
+		*)
+			delimiteur=';'
+			;;
+	esac
+done
 
-	if(($1 == '-s'))
-	then
-		echo trie avec numero de colonne
-		numColonneTrie=$2
-		shift
-		shift
-	fi
-
-
-	if(($1 == '-S'))
-	then
-		echo trie avec nom
-		nomColonneTrie=$2
-		shift
-		shift
-	fi
-fi
-
-
-
+echo $trie
 
 echo "<!doctype html>
 <html lang=\"fr\">
@@ -44,7 +34,7 @@ echo "<!doctype html>
 	<table>
 
 		$(sed -n 1p $nomFichierEntrant | sed -e "s/^/<tr><th>/" -e "s/$delimiteur/<\/th><th>/g" -e 's/$/<\/th><\/tr>/')
-		$(sed 1d $nomFichierEntrant | sed -e "s/^/<tr><td>/" -e "s/$delimiteur/<\/td><td>/g" -e 's/$/<\/td><\/tr>/')
+		$(sed 1d $nomFichierEntrant $trie |  sed -e "s/^/<tr><td>/" -e "s/$delimiteur/<\/td><td>/g" -e 's/$/<\/td><\/tr>/')
 
 	</table>
 </body>
