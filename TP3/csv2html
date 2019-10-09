@@ -9,13 +9,13 @@ then
 		delimiteur=$2
 	fi
 
-	if(($1 == "-s"))
+	else if(($1 == "-s"))
 	then
 		echo trie avec numero de colonne
 		numColonneTrie=$2
 	fi
 
-	if(($1 == "-S"))
+	else if(($1 == "-S"))
 	then
 		echo trie avec nom
 		nomColonneTrie=$2
