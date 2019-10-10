@@ -1,15 +1,26 @@
 #!/bin/bash
 
-list(){
+####         Affiche le contenu d'un dossier sous forme d'arbre                    ######
 
-    for file in $1/*
+#On crée une fonction recherche
+recherche() {
+ 
+    #Pour chaque fichier du premier parametre($1) 
+    for file in "$1"/*
     do
-        if [ -d $file ]
-        then
-            echo $file
-            list $file
-        else
-            echo $file
-        fi
+        #l'option -d de bash vérifie si le fichier est un répertoire
+        if [ -d "$file" ]
+    	   then
+                #Si c'est un répertoire on affiche le dossier courant en deuxieme parametre et le nom du dossier 
+    	        echo "$2" "$file"
+                #On relance la recherche avec le nom du dossier($file) et le nom 
+                recherche "$file" "    $2"
+            else
+    	        #Si ce n'est pas un dossier on affiche le deuxieme arguments et le nom du fichier (avec basename pour supprimer le chemin)
+                echo "$2" "`basename $file`"
+	    fi
     done
-}   
+}
+
+#On lance la recherche avec l'argument donné en parametre et une chaine vide
+recherche "$1" ""

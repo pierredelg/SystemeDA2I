@@ -1,4 +1,11 @@
 #!/bin/bash
+
+#####		Permet de voir le contenu d'une variable      #####
+
+#On demande à l'utilisateur
+#Tant que la réponse ne correspond pas à "FINI" le programme continue
+#On affiche la variable en échappant le caractere '$' (\$) pour l'afficher suivi du nom de la variable ($reponse)
+#On évalue le contenu avec la commande eval 
 while [ "$reponse" != "FINI" ]
 do
 	echo "Entrez le nom de la variable"
