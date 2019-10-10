@@ -3,6 +3,6 @@ while [ "$reponse" != "FINI" ]
 do
 	echo "Entrez le nom de la variable"
     read reponse 
-    eval echo \$$reponse   #echo ${!reponse}
+    eval echo \$$reponse
     
 done
