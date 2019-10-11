@@ -1,0 +1,31 @@
+#!/bin/bash
+
+##Le script ne traite qu'une seule requete et ensuite quitte
+
+#On lit la 1ere ligne
+read method ressource version
+
+#On ignore la suite
+while (pasligne vide)
+do
+	read line
+done
+
+
+#On vérifie la version
+
+
+
+
+reponse:
+code = [0-9]{3}
+#code géré 200, 400 ,404 ,(méthode non supportée)
+
+
+#il faut gerer le content-length et le content-type
+
+#le content-type est vérifié et reconnu par l'extension du fichier 
+# les types mimes sont dans /etc/mime.types
+
+#On utilise printf au lieu d'echo pour envoyer les données.
+
