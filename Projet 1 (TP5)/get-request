@@ -2,7 +2,10 @@
 
 PATH=$(cd $(dirname $0) ; pwd):$PATH
 
+rm /tmp/requete
+
 tube=/tmp/requete
+
 mkfifo $tube
 
 while true

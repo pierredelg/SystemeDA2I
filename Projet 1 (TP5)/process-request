@@ -3,22 +3,51 @@
 ##Le script ne traite qu'une seule requete et ensuite quitte
 
 #On lit la 1ere ligne
-read method ressource version
+read methode ressource version
+
+printf "methode = %s \r\n" "$methode"
+printf "ressource = %s \r\n" "$ressource"
+printf "version = %s \r\n" "$version"
+printf "reste = %s \r\n" "$reste"
+
+line="test"
 
 #On ignore la suite
-while (pasligne vide)
+while [ "$line" != "\r\n" ]
 do
 	read line
+	echo "ligne echo = $line" 
+	printf "ligne printf = %s \r\n" "$line"
 done
 
 
 #On vérifie la version
 
+#[400]="Bad Request"
 
+#Si la methode n'est pas GET
+if [ ! "$methode" = "GET" ]
+	then
+		status='405 Method Not Allowed'
+elif [ ! -e "$resource" ]
+	then
+  		status='404 Not Found'
+elif [ ! -r "$resource" ]
+	then
+  		status='403 Forbidden'
+elif [ -f "$resource" ]
+	then
+  		status='200 OK'
+fi
 
+printf "status = %s \r\n" "$status"
 
-reponse:
-code = [0-9]{3}
+ligneReponse1="HTTP/1.1 $status \r\n"
+ligneReponse2="content-length : $tailleReponse \r\n"
+ligneReponse3="content-type : $contentType \r\n"
+
+#reponse:
+#code = [0-9]{3}
 #code géré 200, 400 ,404 ,(méthode non supportée)
 
 
