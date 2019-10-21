@@ -1,0 +1,49 @@
+#!/bin/bash
+
+#On définie les variables par défaut
+port="8080"
+cheminRacine="~/"
+cheminModele="~/"
+
+#On vérifie les options entrées
+while getopts ":d:p:t:" option
+do
+    case $option in
+		d)
+			#Si l'option -d est entrée on modifie le chemin vers la racine des fichiers à donner
+			cheminRacine=${OPTARG}
+			;;
+		p)	
+			#Si l'option -p est entrée on modifie le port d'écoute du serveur
+			port=${OPTARG}
+			;;
+		t)
+			#Si l'option -t est entrée on modifie le chemin du modele HTML utilisé
+			cheminModele=${OPTARG}
+			;;
+		*)
+			#Si l'option -h est entrée on ajoute  
+			if [ "$1" = "-h" ]
+			then
+				help="ok"
+			fi
+			;;
+	esac
+done
+
+#si la variable help n'est pas nulle on affiche l'aide
+if [ ! -z "$help" ]
+then
+	echo "HTTP-server for GET request
+Usage: http-server [-d destination] [-p port] [-t path]
+Command Summary:
+	-d 	Specify the path containing the files served
+	-h 	This help text
+	-p 	Specify listen port
+	-t 	Specify the location of the template used to generate the HTML pages"
+fi
+			
+#On appel le script get-request avec en parametre les options 
+get-request $port $cheminRacine $cheminModele
+
+
