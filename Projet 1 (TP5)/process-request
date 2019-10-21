@@ -1,28 +1,86 @@
 #!/bin/bash
 
+#fonction permettant de supprimer le \r pour chaque ligne
+format(){
+	printf "%s" $1 | tr -d "\r"
+}
+
 ##Le script ne traite qu'une seule requete et ensuite quitte
 
 #On lit la 1ere ligne
-read method ressource version
+read methode ressource version
+
+printf "methode = %s" "$methode"
+printf "ressource = %s" "$ressource"
+printf "version = %s" "$version"
+printf "reste = %s" "$reste"
+
 
 #On ignore la suite
-while (pasligne vide)
+while read ligne
 do
-	read line
+	#printf "ligne printf = %s" "$ligne"
+	ligne= format "$ligne"
+	printf "%s" "$ligne"
+	if [ "$ligne" = "" ]
+	then
+		echo 'ligne'
+		break;
+	fi
 done
 
+echo "fin de boucle"
 
-#On vérifie la version
+#[400]="Bad Request"
+
+#Si la methode n'est pas GET
+if [ ! "$methode" = 'GET' ]
+	then
+		status='405 Method Not Allowed'
+		#Pour la taille on ajoute un caractere correspondant au \r
+		tailleReponse='23'
+
+#Si la version ne correspond pas a la version 1 de HTTP
+elif [ ! "$version" = 'HTTP/1.1' ]
+	then
+		status='505 HTTP Version Not Supported'
+		tailleReponse='31'
+
+#Si la ressource n'existe pas
+elif [ ! -e "$resource" ]
+	then
+  		status='404 Not Found'
+  		tailleReponse='14'
+
+#Si la ressource est un dossier
+elif [ ! -r "$resource" ]
+	then
+  		status='403 Forbidden'
+  		tailleReponse='14'
+
+#Si la ressource est bien un fichier
+elif [ -f "$resource" ]
+	then
+  		status='200 OK'
+  		tailleReponse='7'
+
+fi
+
+#On prepare la réponse au format http
+ligneReponse1="HTTP/1.1 $status \r\n"
+printf "%s" "$ligneReponse1"
+ligneReponse2="content-length : $tailleReponse \r\n"
+printf "%s" "$ligneReponse2"
+ligneReponse3="content-type : $contentType \r\n"
+printf "%s" "$ligneReponse3"
 
 
 
-
-reponse:
-code = [0-9]{3}
+#reponse:
+#code = [0-9]{3}
 #code géré 200, 400 ,404 ,(méthode non supportée)
 
 
-#il faut gerer le content-length et le content-type
 
 #le content-type est vérifié et reconnu par l'extension du fichier 
 # les types mimes sont dans /etc/mime.types
