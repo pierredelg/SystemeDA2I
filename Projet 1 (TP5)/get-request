@@ -1,15 +1,22 @@
 #!/bin/bash
 
+#On récupère ici le numero de port 
+#le chemin de la racine des fichiers
+#et le chemin du modele HTML provenant du script http-server
 port=$1
 cheminRacine=$2
 cheminModele=$3
 
+#On définie le PATH pour que le chemin soit toujours celui du script
 PATH=$(cd $(dirname $0) ; pwd):$PATH
 
+#On supprime le chemin du tube nommé 
 rm /tmp/requete
 
+#On donne le chemin du tube nommé
 tube=/tmp/requete
 
+#On crée le tube nommé 
 mkfifo $tube
 
 while true
