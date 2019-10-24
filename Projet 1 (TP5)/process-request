@@ -1,8 +1,15 @@
 #!/bin/bash
 
+#On recupere le chemin de la racine des fichiers
+#et le chemin du modele HTML provenant du script http-server
+cheminRacine=$1
+cheminModele=$2
+
+set -x
+
 #fonction permettant de supprimer le \r pour chaque ligne
 format(){
-	printf "%s" $1 | tr -d "\r"
+	echo "$1" | tr -d '\r'
 }
 
 ##Le script ne traite qu'une seule requete et ensuite quitte
@@ -10,26 +17,24 @@ format(){
 #On lit la 1ere ligne
 read methode ressource version
 
-printf "methode = %s" "$methode"
-printf "ressource = %s" "$ressource"
-printf "version = %s" "$version"
-printf "reste = %s" "$reste"
+#On retire le \r de la version
+version= $(format "$version")
+
+printf "methode = %s\r\n" "$methode"
+printf "ressource = %s\r\n" "$ressource"
+printf "version = %s\r\n" "$version"
+printf "reste = %s\r\n" "$reste"
 
 
 #On ignore la suite
 while read ligne
 do
-	#printf "ligne printf = %s" "$ligne"
-	ligne= format "$ligne"
-	printf "%s" "$ligne"
+	ligne= $(format "$ligne")
 	if [ "$ligne" = "" ]
 	then
-		echo 'ligne'
 		break;
 	fi
 done
-
-echo "fin de boucle"
 
 #[400]="Bad Request"
 
@@ -66,14 +71,14 @@ elif [ -f "$resource" ]
 
 fi
 
-#On prepare la réponse au format http
-ligneReponse1="HTTP/1.1 $status \r\n"
-printf "%s" "$ligneReponse1"
-ligneReponse2="content-length : $tailleReponse \r\n"
-printf "%s" "$ligneReponse2"
-ligneReponse3="content-type : $contentType \r\n"
-printf "%s" "$ligneReponse3"
 
+#On prepare la réponse au format http
+ligneReponse1="HTTP/1.1 $status"
+printf "%s\r\n" "$ligneReponse1"
+ligneReponse2="content-length : $tailleReponse"
+printf "%s\r\n" "$ligneReponse2"
+ligneReponse3="content-type : $contentType"
+printf "%s\r\n" "$ligneReponse3"
 
 
 #reponse:

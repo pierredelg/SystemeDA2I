@@ -1,0 +1,11 @@
+#!/bin/bash
+
+#On récupere le contenu du fichier entrant (corps.txt)
+texte=$(cat)
+
+#On affiche le fichier en parametre
+#On ajoute le texte du fichier après la fin de remplacement avec l'option a (signifie après)
+#On supprime les lignes entre les deux motifs /patern1/,/patern2/ suivi de l'option d (signifie delete)
+
+cat $1 | sed "/--FIN_REMPLACEMENT--/ a $texte" -e '/--DEBUT_REMPLACEMENT--/,/--FIN_REMPLACEMENT--/ d' -e "s/\<\*(.+)\*\>/<strong>\1</strong>/"
+

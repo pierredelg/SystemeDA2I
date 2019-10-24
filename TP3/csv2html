@@ -11,12 +11,12 @@ while getopts "d:s:S:" option
 do
     case $option in
         d)	
-			delimiteur=${OPTARG}
+			delimiteur=$OPTARG
 			;;
 		s)
 			#La variable trie est initialisée de façon à ajouter le trie 
-			#par le numero de colonne($OPTARG) séparé par le délimiteur($delimiteur) donné en parametre 
-			trie= " | sort -t '$delimiteur' -k ${OPTARG} "
+			#par le numero de colonne($OPTARG) séparé par le délimiteur($delimiteur) donné en parametre
+			trie="-k $OPTARG"
 			;;
 		S)
 			#On trie par nom de colonne($OPTARG) donné en parametre
@@ -25,7 +25,8 @@ do
 			#On affiche les lignes (-n) et on cherche le nom de colonne avec grep en ignorant la casse (-i)
 			#On récupere uniquement le numero de ligne avec $(cut -d : -f1)
 			#Si on a plusieurs noms équivalent on récupere le premier avec $(head -n 1)
-			trie= " | sort -t '$delimiteur' -k $(sed -n 1p $nomFichierEntrant | tr ";" "\n" | grep -in ${OPTARG} | cut -d : -f1  | head -n 1) "
+			numero=$(sed -n 1p $nomFichierEntrant | tr ";" "\n" | grep -in $OPTARG | cut -d : -f1  | head -n 1)
+			trie="-k $numero"
 			;;
 		*)
 			delimiteur=';'
@@ -33,9 +34,6 @@ do
 	esac
 done
 
-echo delimiteur = $delimiteur
-echo trie = $trie
-echo sed 1d $nomFichierEntrant $trie
 
 #On affiche le contenu du fichier entrant dans un fichier sortant sous la forme d'un tableau en HTML
 #Explication des commandes effectuées:
@@ -53,7 +51,7 @@ echo "<!doctype html>
 <body>
 	<table>
 $(sed -n 1p $nomFichierEntrant | sed -e "s/^/\t\t<tr>\n\t\t\t<th>/" -e "s/$delimiteur/<\/th>\n\t\t\t<th>/g" -e 's/$/<\/th>\n\t\t<\/tr>/')
-$(sed 1d $nomFichierEntrant $trie |  sed -e "s/^/\t\t<tr>\n\t\t\t<td>/" -e "s/$delimiteur/<\/td>\n\t\t\t<td>/g" -e 's/$/<\/td>\n\t\t<\/tr>/')
+$(sed 1d $nomFichierEntrant | sort -t "$delimiteur" $trie |  sed -e "s/^/\t\t<tr>\n\t\t\t<td>/" -e "s/$delimiteur/<\/td>\n\t\t\t<td>/g" -e 's/$/<\/td>\n\t\t<\/tr>/')
 	</table>
 </body>
 </html>" > $nomFichierSortant
