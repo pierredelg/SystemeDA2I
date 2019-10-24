@@ -1,0 +1,50 @@
+#!/bin/bash
+#DELGRANGE Pierre 	MELEZE11
+
+delimiteur=','
+
+fabriquer_dn () {
+	
+	echo  "uid=$1,dc=da2i,dc=fr"
+}
+
+if (( "$#" < 1 )) 
+then
+	echo "Erreur : Indiquez le chemin du fichier .csv à transformer"
+
+# elif 
+# 	test=$(echo "$premiereLigneCSV" | tr "$delimiteur" '\n' | grep -in "uid")
+# 	if [ -z "$test" ]
+# 	then
+# 	 echo "Erreur : Il manque une colonne uid"
+# 	fi
+else
+
+	nomFichierCSV=$1;
+
+	premiereLigneCSV=$(sed -n 1p "$nomFichierCSV")
+
+	numeroColonneUid=$( echo "$premiereLigneCSV" | tr "$delimiteur" '\n' | grep -in "uid" | cut -d : -f1  | head -n 1 )
+
+	nombreColonne=$(sed -n 1p test.csv | tr ',' '\n' | wc -l)
+	nombreColonne=$(expr "$nombreColonne" + 1)
+
+	sed 1d "$nomFichierCSV" | while read ligne 
+	do
+		uid=$( echo "$ligne" | cut -d ',' -f "$numeroColonneUid" )
+
+		dn=$(fabriquer_dn "$uid")
+
+		echo "$dn"
+
+		for (( i=1 ; "$i" < "$nombreColonne" ; i++ ))
+		do
+			nomAttribut=$(echo "$premiereLigneCSV" | cut -d "$delimiteur" -f "$i")
+			valeurAttribut=$(echo "$ligne" | cut -d "$delimiteur" -f "$i")
+			echo "$nomAttribut : $valeurAttribut"
+		done 
+
+	done
+
+fi
+
