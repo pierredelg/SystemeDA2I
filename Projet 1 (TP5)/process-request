@@ -2,8 +2,8 @@
 
 #On recupere le chemin de la racine des fichiers
 #et le chemin du modele HTML provenant du script http-server
-cheminRacine=$1
-cheminModele=$2
+cheminRacine=$(echo "$1")
+cheminModele=$(echo "$2")
 
 set -x
 
@@ -18,18 +18,14 @@ function format( ) {
 read methode ressource version
 
 #On retire le \r de la version
-version= $(format "$version")
+version=$(format "$version")
 
-printf "methode = %s\r\n" "$methode"
-printf "ressource = %s\r\n" "$ressource"
-printf "version = %s\r\n" "$version"
-printf "reste = %s\r\n" "$reste"
-
+ressource=$(echo "$cheminRacine""$ressource")
 
 #On ignore la suite
 while read ligne
 do
-	ligne= $(format "$ligne")
+	ligne=$(format "$ligne")
 	if [ "$ligne" = "" ]
 	then
 		break;
@@ -51,16 +47,16 @@ elif [ ! "$version" = 'HTTP/1.1' ]
 		status='505 HTTP Version Not Supported'
 		tailleReponse='31'
 
-#Si la ressource n'existe pas
-elif [ ! -e "$resource" ]
-	then
-  		status='404 Not Found'
-  		tailleReponse='14'
-
 #Si la ressource est un dossier
 elif [ ! -r "$resource" ]
 	then
   		status='403 Forbidden'
+  		tailleReponse='14'
+
+#Si la ressource n'existe pas
+elif [ ! -e "$resource" ]
+	then
+  		status='404 Not Found'
   		tailleReponse='14'
 
 #Si la ressource est bien un fichier
@@ -68,6 +64,8 @@ elif [ -f "$resource" ]
 	then
   		status='200 OK'
   		tailleReponse='7'
+
+  	 	fichier=$(cat "$resource")
 
 fi
 
@@ -79,6 +77,8 @@ ligneReponse2="content-length : $tailleReponse"
 printf "%s\r\n" "$ligneReponse2"
 ligneReponse3="content-type : $contentType"
 printf "%s\r\n" "$ligneReponse3"
+printf "\r\n"
+printf "%s" "$resource"
 
 
 #reponse:

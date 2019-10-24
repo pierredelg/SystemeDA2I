@@ -1,0 +1,53 @@
+#!/bin/bash
+#DELGRANGE Pierre 	MELEZE11
+set -x
+delimiteur=','
+
+fabriquer_dn () {
+	
+	echo  "uid=$1,dc=da2i,dc=fr"
+}
+
+transforme () {
+
+		uid=$( echo "$1" | cut -d ',' -f "$numeroColonneUid" )
+
+		dn=$(fabriquer_dn "$uid")
+
+		echo "$dn"
+
+		for (( i=1 ; "$i" < "$nombreColonne" ; i++ ))
+		do
+			nomAttribut=$(echo "$premiereLigneCSV" | cut -d "$delimiteur" -f "$i")
+			valeurAttribut=$(echo "$1" | cut -d "$delimiteur" -f "$i")
+			echo "$nomAttribut : $valeurAttribut"
+		done 
+
+}
+
+if (( "$#" < 1 )) 
+then
+	echo "Erreur : Indiquez le chemin du fichier .csv à transformer"
+
+else
+
+	nomFichierCSV=$1;
+
+	premiereLigneCSV=$(sed -n 1p "$nomFichierCSV")
+
+	numeroColonneUid=$( echo "$premiereLigneCSV" | tr "$delimiteur" '\n' | grep -in "uid" | cut -d : -f1  | head -n 1 )
+
+	nombreColonne=$(sed -n 1p test.csv | tr ',' '\n' | wc -l)
+	nombreColonne=$(expr "$nombreColonne" + 1)
+
+	sed 1d "$nomFichierCSV" | while read ligne 
+	do
+		transforme "$ligne"
+	done
+
+	read ligne
+
+	transforme $ligne
+
+fi
+
