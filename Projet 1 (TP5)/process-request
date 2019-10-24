@@ -8,7 +8,7 @@ cheminModele=$2
 set -x
 
 #fonction permettant de supprimer le \r pour chaque ligne
-format(){
+function format( ) {
 	echo "$1" | tr -d '\r'
 }
 
