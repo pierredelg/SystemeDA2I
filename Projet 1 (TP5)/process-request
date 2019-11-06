@@ -2,9 +2,8 @@
 
 #On recupere le chemin de la racine des fichiers
 #et le chemin du modele HTML provenant du script http-server
-cheminRacine=$(echo "$1")
-cheminModele=$(echo "$2")
-
+cheminRacine=$1
+cheminModele=$2
 set -x
 
 #fonction permettant de supprimer le \r pour chaque ligne
@@ -19,6 +18,13 @@ read methode ressource version
 
 #On retire le \r de la version
 version=$(format "$version")
+
+##On teste le /contenu
+
+
+#on teste le /html
+
+#sinon
 
 ressource=$(echo "$cheminRacine""$ressource")
 
@@ -38,47 +44,52 @@ done
 if [ ! "$methode" = 'GET' ]
 	then
 		status='405 Method Not Allowed'
+		fichier=$status
 		#Pour la taille on ajoute un caractere correspondant au \r
-		tailleReponse='23'
+		tailleReponse='22'
 
 #Si la version ne correspond pas a la version 1 de HTTP
 elif [ ! "$version" = 'HTTP/1.1' ]
 	then
 		status='505 HTTP Version Not Supported'
-		tailleReponse='31'
-
-#Si la ressource est un dossier
-elif [ ! -r "$resource" ]
-	then
-  		status='403 Forbidden'
-  		tailleReponse='14'
+		fichier=$status
+		tailleReponse='30'
 
 #Si la ressource n'existe pas
-elif [ ! -e "$resource" ]
+elif [ ! -e "$ressource" ]
 	then
   		status='404 Not Found'
-  		tailleReponse='14'
+  		fichier=$status
+  		tailleReponse='13'
+
+#Si la ressource est un dossier
+elif [ ! -r "$ressource" ]
+	then
+  		status='403 Forbidden'
+  		fichier=$status
+  		tailleReponse='13'
 
 #Si la ressource est bien un fichier
-elif [ -f "$resource" ]
+elif [ -f "$ressource" ]
 	then
   		status='200 OK'
-  		tailleReponse='7'
+  		tailleReponse=$(ls -lh $ressource| cut -d " " -f5)
 
-  	 	fichier=$(cat "$resource")
+  	 	fichier=$(cat "$ressource")
 
 fi
 
+contentType="text/html"
 
 #On prepare la réponse au format http
 ligneReponse1="HTTP/1.1 $status"
 printf "%s\r\n" "$ligneReponse1"
-ligneReponse2="content-length : $tailleReponse"
+ligneReponse2="Content-length: $tailleReponse"
 printf "%s\r\n" "$ligneReponse2"
-ligneReponse3="content-type : $contentType"
+ligneReponse3="Content-type: $contentType ; charset=UTF-8"
 printf "%s\r\n" "$ligneReponse3"
 printf "\r\n"
-printf "%s" "$resource"
+printf "%s\r\n" "$fichier"
 
 
 #reponse:
