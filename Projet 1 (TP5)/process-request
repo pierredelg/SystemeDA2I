@@ -19,14 +19,66 @@ read methode ressource version
 #On retire le \r de la version
 version=$(format "$version")
 
-##On teste le /contenu
+#Si la methode n'est pas GET
+if [ ! "$methode" = 'GET' ]
+	then
+		status='405 Method Not Allowed'
+		tailleReponse='22'
+		fichier=$status
+#Si la version ne correspond pas à la version 1 de HTTP
+elif [ ! "$version" = 'HTTP/1.1' ]
+	then
+		status='505 HTTP Version Not Supported'
+		tailleReponse='30'
+		fichier=$status
+fi
 
 
-#on teste le /html
+#On teste le /contenu ou /html
+testAction=$(echo "$ressource" | cut -d "/" -f1)
+ressource=$(echo "$ressource" | cut -d "/" -f2)
 
-#sinon
+if [ "$testAction" = 'contenu' ]
+then
+	ressource=$(echo "$cheminRacine""$ressource")
 
-ressource=$(echo "$cheminRacine""$ressource")
+#Si la ressource est bien un fichier
+	if [ -f "$ressource" ]
+	then
+  		status='200 OK'
+  		tailleReponse=$(ls -lh $ressource| cut -d " " -f5)
+  	 	fichier=$(cat "$ressource")
+  	else
+  		status='406 Not Acceptable'
+  		tailleReponse='18'
+  		fichier=$status
+  	fi
+
+elif [ "$testAction" = 'html' ]
+then
+
+fi
+
+
+# #Si la ressource n'existe pas
+# if [ ! -e "$ressource" ]
+# 	then
+#   		status='404 Not Found'
+#   		tailleReponse='13'
+#   		fichier=$status
+
+
+# #Si la ressource est un dossier
+# elif [ ! -r "$ressource" ]
+# 	then
+#   		status='403 Forbidden'
+#   		tailleReponse='13'
+#   		fichier=$status
+# fi
+
+
+#sinon 406 
+
 
 #On ignore la suite
 while read ligne
@@ -38,47 +90,7 @@ do
 	fi
 done
 
-#[400]="Bad Request"
-
-#Si la methode n'est pas GET
-if [ ! "$methode" = 'GET' ]
-	then
-		status='405 Method Not Allowed'
-		fichier=$status
-		#Pour la taille on ajoute un caractere correspondant au \r
-		tailleReponse='22'
-
-#Si la version ne correspond pas a la version 1 de HTTP
-elif [ ! "$version" = 'HTTP/1.1' ]
-	then
-		status='505 HTTP Version Not Supported'
-		fichier=$status
-		tailleReponse='30'
-
-#Si la ressource n'existe pas
-elif [ ! -e "$ressource" ]
-	then
-  		status='404 Not Found'
-  		fichier=$status
-  		tailleReponse='13'
-
-#Si la ressource est un dossier
-elif [ ! -r "$ressource" ]
-	then
-  		status='403 Forbidden'
-  		fichier=$status
-  		tailleReponse='13'
-
-#Si la ressource est bien un fichier
-elif [ -f "$ressource" ]
-	then
-  		status='200 OK'
-  		tailleReponse=$(ls -lh $ressource| cut -d " " -f5)
-
-  	 	fichier=$(cat "$ressource")
-
-fi
-
+#On teste le content-type
 contentType="text/html"
 
 #On prepare la réponse au format http
