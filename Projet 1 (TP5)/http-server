@@ -15,8 +15,8 @@ removeSlash(){
 
 #On définie les variables par défaut
 port="8080"
-cheminRacine=$(pwd)
-cheminModele=$(pwd)
+cheminRacine="$(pwd)"
+cheminModele="$(pwd)"
 
 
 #On vérifie les options entrées
@@ -62,6 +62,6 @@ Command Summary:
 fi
 			
 #On appel le script get-request avec en parametre les options 
-get-request $port $cheminRacine $cheminModele
+get-request "$port" "$cheminRacine" "$cheminModele"
 
 

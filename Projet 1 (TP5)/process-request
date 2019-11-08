@@ -2,8 +2,8 @@
 
 #On recupere le chemin de la racine des fichiers
 #et le chemin du modele HTML provenant du script http-server
-cheminRacine=$1
-cheminModele=$2
+cheminRacine="$1"
+cheminModele="$2"
 set -x
 
 #fonction permettant de supprimer le \r pour chaque ligne
@@ -23,39 +23,63 @@ version=$(format "$version")
 if [ ! "$methode" = 'GET' ]
 	then
 		status='405 Method Not Allowed'
+		contentType='text/plain'
 		tailleReponse='22'
 		fichier=$status
+
 #Si la version ne correspond pas à la version 1 de HTTP
 elif [ ! "$version" = 'HTTP/1.1' ]
 	then
 		status='505 HTTP Version Not Supported'
+		contentType='text/plain'
 		tailleReponse='30'
 		fichier=$status
 fi
 
 
 #On teste le /contenu ou /html
-testAction=$(echo "$ressource" | cut -d "/" -f1)
-ressource=$(echo "$ressource" | cut -d "/" -f2)
+testAction=$(echo "$ressource" | cut -d "/" -f2)
+ressource=$(echo "$ressource" | cut -d "/" -f3-)
 
 if [ "$testAction" = 'contenu' ]
 then
-	ressource=$(echo "$cheminRacine""$ressource")
+	ressource="$cheminRacine/$ressource"
 
 #Si la ressource est bien un fichier
 	if [ -f "$ressource" ]
 	then
   		status='200 OK'
-  		tailleReponse=$(ls -lh $ressource| cut -d " " -f5)
+  		contentType=$(file --mime-type "$ressource" | cut -d ":" -f1)
+  		tailleReponse=$(ls -lh "$ressource" | cut -d " " -f5)
   	 	fichier=$(cat "$ressource")
-  	else
-  		status='406 Not Acceptable'
-  		tailleReponse='18'
-  		fichier=$status
   	fi
 
-elif [ "$testAction" = 'html' ]
+fi
+
+if [ "$testAction" = 'html' ]
 then
+	contentType=$(file --mime-type "$ressource" | cut -d ":" -f1)
+	extension=$(basename "$ressource" | cut -d "." -f2)
+
+
+	if [ "$extension" =  'csv' ]
+	then
+		status='200 OK'
+		fichier=$(csv2html "$ressource")
+		tailleReponse=$(ls -lh "$fichier" | cut -d " " -f5)
+
+	elif [ "$extension" = 'txt' || "$contentType" = '' ]
+	then
+		status='200 OK'
+	fi
+fi
+
+if [[ "$testAction" != 'html' && "$testAction" != 'contenu' ]]
+then
+		status='406 Not Acceptable'
+		contentType='text/plain'
+  		tailleReponse='18'
+  		fichier=$status
 
 fi
 
@@ -77,9 +101,6 @@ fi
 # fi
 
 
-#sinon 406 
-
-
 #On ignore la suite
 while read ligne
 do
@@ -90,16 +111,18 @@ do
 	fi
 done
 
-#On teste le content-type
-contentType="text/html"
 
 #On prepare la réponse au format http
 ligneReponse1="HTTP/1.1 $status"
 printf "%s\r\n" "$ligneReponse1"
 ligneReponse2="Content-length: $tailleReponse"
 printf "%s\r\n" "$ligneReponse2"
-ligneReponse3="Content-type: $contentType ; charset=UTF-8"
-printf "%s\r\n" "$ligneReponse3"
+
+if [ ! -z contentType ]
+then 
+	ligneReponse3="Content-type:$contentType ; charset=UTF-8"
+	printf "%s\r\n" "$ligneReponse3"
+fi
 printf "\r\n"
 printf "%s\r\n" "$fichier"
 
