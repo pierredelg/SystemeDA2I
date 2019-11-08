@@ -2,9 +2,8 @@
 
 #On recupere le chemin de la racine des fichiers
 #et le chemin du modele HTML provenant du script http-server
-cheminRacine=$(echo "$1")
-cheminModele=$(echo "$2")
-
+cheminRacine="$1"
+cheminModele="$2"
 set -x
 
 #fonction permettant de supprimer le \r pour chaque ligne
@@ -20,7 +19,87 @@ read methode ressource version
 #On retire le \r de la version
 version=$(format "$version")
 
-ressource=$(echo "$cheminRacine""$ressource")
+#Si la methode n'est pas GET
+if [ ! "$methode" = 'GET' ]
+	then
+		status='405 Method Not Allowed'
+		contentType='text/plain'
+		tailleReponse='22'
+		fichier=$status
+
+#Si la version ne correspond pas à la version 1 de HTTP
+elif [ ! "$version" = 'HTTP/1.1' ]
+	then
+		status='505 HTTP Version Not Supported'
+		contentType='text/plain'
+		tailleReponse='30'
+		fichier=$status
+fi
+
+
+#On teste le /contenu ou /html
+testAction=$(echo "$ressource" | cut -d "/" -f2)
+ressource=$(echo "$ressource" | cut -d "/" -f3-)
+
+if [ "$testAction" = 'contenu' ]
+then
+	ressource="$cheminRacine/$ressource"
+
+#Si la ressource est bien un fichier
+	if [ -f "$ressource" ]
+	then
+  		status='200 OK'
+  		contentType=$(file --mime-type "$ressource" | cut -d ":" -f1)
+  		tailleReponse=$(ls -lh "$ressource" | cut -d " " -f5)
+  	 	fichier=$(cat "$ressource")
+  	fi
+
+fi
+
+if [ "$testAction" = 'html' ]
+then
+	contentType=$(file --mime-type "$ressource" | cut -d ":" -f1)
+	extension=$(basename "$ressource" | cut -d "." -f2)
+
+
+	if [ "$extension" =  'csv' ]
+	then
+		status='200 OK'
+		fichier=$(csv2html "$ressource")
+		tailleReponse=$(ls -lh "$fichier" | cut -d " " -f5)
+
+	elif [ "$extension" = 'txt' || "$contentType" = '' ]
+	then
+		status='200 OK'
+	fi
+fi
+
+if [[ "$testAction" != 'html' && "$testAction" != 'contenu' ]]
+then
+		status='406 Not Acceptable'
+		contentType='text/plain'
+  		tailleReponse='18'
+  		fichier=$status
+
+fi
+
+
+# #Si la ressource n'existe pas
+# if [ ! -e "$ressource" ]
+# 	then
+#   		status='404 Not Found'
+#   		tailleReponse='13'
+#   		fichier=$status
+
+
+# #Si la ressource est un dossier
+# elif [ ! -r "$ressource" ]
+# 	then
+#   		status='403 Forbidden'
+#   		tailleReponse='13'
+#   		fichier=$status
+# fi
+
 
 #On ignore la suite
 while read ligne
@@ -32,53 +111,20 @@ do
 	fi
 done
 
-#[400]="Bad Request"
-
-#Si la methode n'est pas GET
-if [ ! "$methode" = 'GET' ]
-	then
-		status='405 Method Not Allowed'
-		#Pour la taille on ajoute un caractere correspondant au \r
-		tailleReponse='23'
-
-#Si la version ne correspond pas a la version 1 de HTTP
-elif [ ! "$version" = 'HTTP/1.1' ]
-	then
-		status='505 HTTP Version Not Supported'
-		tailleReponse='31'
-
-#Si la ressource est un dossier
-elif [ ! -r "$resource" ]
-	then
-  		status='403 Forbidden'
-  		tailleReponse='14'
-
-#Si la ressource n'existe pas
-elif [ ! -e "$resource" ]
-	then
-  		status='404 Not Found'
-  		tailleReponse='14'
-
-#Si la ressource est bien un fichier
-elif [ -f "$resource" ]
-	then
-  		status='200 OK'
-  		tailleReponse='7'
-
-  	 	fichier=$(cat "$resource")
-
-fi
-
 
 #On prepare la réponse au format http
 ligneReponse1="HTTP/1.1 $status"
 printf "%s\r\n" "$ligneReponse1"
-ligneReponse2="content-length : $tailleReponse"
+ligneReponse2="Content-length: $tailleReponse"
 printf "%s\r\n" "$ligneReponse2"
-ligneReponse3="content-type : $contentType"
-printf "%s\r\n" "$ligneReponse3"
+
+if [ ! -z contentType ]
+then 
+	ligneReponse3="Content-type:$contentType ; charset=UTF-8"
+	printf "%s\r\n" "$ligneReponse3"
+fi
 printf "\r\n"
-printf "%s" "$resource"
+printf "%s\r\n" "$fichier"
 
 
 #reponse:

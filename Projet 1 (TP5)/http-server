@@ -1,9 +1,23 @@
 #!/bin/bash
+set -x
+removeSlash(){
+	
+	longueur=$(echo "$1" | wc -c)
+	longueur=$(echo $(($longueur-1)))
+
+	if [ $(echo "$1" | cut -c "$longueur") = '/' ]
+	then
+		echo "$1" | sed 's/.$//'
+	else
+		echo "$1"
+	fi 
+}
 
 #On définie les variables par défaut
 port="8080"
-cheminRacine="~/"
-cheminModele="~/"
+cheminRacine="$(pwd)"
+cheminModele="$(pwd)"
+
 
 #On vérifie les options entrées
 while getopts ":d:p:t:" option
@@ -31,6 +45,10 @@ do
 	esac
 done
 
+cheminRacine=$(removeSlash "$cheminRacine")
+echo "chemin racine = $cheminRacine"
+cheminModele=$(removeSlash "$cheminModele")
+
 #si la variable help n'est pas nulle on affiche l'aide
 if [ ! -z "$help" ]
 then
@@ -44,6 +62,6 @@ Command Summary:
 fi
 			
 #On appel le script get-request avec en parametre les options 
-get-request $port $cheminRacine $cheminModele
+get-request "$port" "$cheminRacine" "$cheminModele"
 
 
