@@ -16,7 +16,7 @@ removeSlash(){
 #On définie les variables par défaut
 port="8080"
 cheminRacine="$(pwd)"
-cheminModele="$(pwd)"
+cheminModele="$(pwd)/modele.html"
 
 
 #On vérifie les options entrées

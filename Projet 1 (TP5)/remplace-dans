@@ -4,4 +4,4 @@ modele="$1"
 debut="<!-- DEBUT -->"
 fin="<!-- FIN -->"
 
-sed -e "/$fin/ r/dev/stdin" -e "/$debut/,/$fin/ d" $modele
+sed -e "/$fin/ r/dev/stdin" -e "/$debut/,/$fin/ d" "$modele"
