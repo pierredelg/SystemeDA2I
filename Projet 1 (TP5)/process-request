@@ -52,15 +52,18 @@ then
   		contentType=$(file --mime-type "$ressource" | cut -d ":" -f1)
   		tailleReponse=$(ls -lh "$ressource" | cut -d " " -f5)
   	 	fichier=$(cat "$ressource")
+  	 else
+  	 	status='404 Not Found'
+	   	tailleReponse='13'
+   		fichier=$status
   	fi
 
 fi
 
 if [ "$testAction" = 'html' ]
 then
-	contentType=$(file --mime-type "$ressource" | cut -d ":" -f1)
+	contentType=$(file --mime-type "$ressource" | cut -d ":" -f2)
 	extension=$(basename "$ressource" | cut -d "." -f2)
-
 
 	if [ "$extension" =  'csv' ]
 	then
@@ -71,7 +74,15 @@ then
 	elif [ "$extension" = 'txt' || "$contentType" = '' ]
 	then
 		status='200 OK'
-	fi
+		fichier=$(echo "$ressource" | remplace-dans "$modele")
+		tailleReponse=$(echo "$fichier" | wc -l)
+	#Si la ressource est un dossier
+ 	elif [ ! -r "$ressource" ]
+ 	then
+   		status='403 Forbidden'
+   		tailleReponse='13'
+   		fichier=$status
+ 	fi
 fi
 
 if [[ "$testAction" != 'html' && "$testAction" != 'contenu' ]]
@@ -80,7 +91,6 @@ then
 		contentType='text/plain'
   		tailleReponse='18'
   		fichier=$status
-
 fi
 
 
@@ -92,13 +102,7 @@ fi
 #   		fichier=$status
 
 
-# #Si la ressource est un dossier
-# elif [ ! -r "$ressource" ]
-# 	then
-#   		status='403 Forbidden'
-#   		tailleReponse='13'
-#   		fichier=$status
-# fi
+
 
 
 #On ignore la suite
