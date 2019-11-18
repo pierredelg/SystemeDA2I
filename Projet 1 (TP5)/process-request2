@@ -1,0 +1,124 @@
+#!/bin/bash
+set -x
+#On recupere le chemin de la racine des fichiers
+#et le chemin du modele HTML provenant du script http-server
+cheminRacine="$1"
+cheminModele="$2"
+
+function format( ) {
+	echo "$1" | tr -d '\r'
+}
+
+#On lit la 1ere ligne
+read methode ressource version
+
+#On ignore la suite
+while read ligne
+do
+	ligne=$(format "$ligne")
+	if [ "$ligne" = "" ]
+	then
+		break;
+	fi
+done
+
+#On retire le \r de la version
+version=$(format "$version")
+
+
+#fonction affichant le head de la réponse
+#$1 => status
+#$2 => type mime
+#$3 => longueur du body de la réponse
+function head_reponse(){
+	printf "HTTP/1.1 %s\r\n" "$1"
+	printf "Content-type:%s ; charset=UTF-8\r\n" "$2"
+	printf "Content-length: %s\r\n" "$3"
+	printf "\r\n"
+}
+
+#Si la methode n'est pas GET
+if [ ! "$methode" = 'GET' ]
+	then
+		status="405 Method Not Allowed"
+		head_reponse "$status" "text/plain" "22"
+		printf "$status"
+fi
+		
+#Si la version ne correspond pas à la version 1 de HTTP
+if [ ! "$version" = 'HTTP/1.1' ]
+	then
+		status='505 HTTP Version Not Supported'
+		head_reponse "$status" "text/plain" "30"
+		printf "$status"
+fi
+
+#On récupere l'action (/contenu ou /html)
+testAction=$(echo "$ressource" | cut -d "/" -f2)
+#suivi de la ressource
+ressource=$(echo "$ressource" | cut -d "/" -f3-)
+ressource="$cheminRacine/$ressource"
+
+#Si la ressource existe
+if [ ! -e "$ressource" ]
+then
+	#Si le fichier n'existe pas on retourne 404
+ 	status='404 Not Found'
+	head_reponse "$status" "text/plain" "13"
+	printf "$status"
+fi
+
+contentType=$(file --mime-type "$ressource" | cut -d ":" -f1)
+
+#Si l'action est /contenu
+if [ "$testAction" = 'contenu' ]
+then
+	 #Si ce n'est pas un fichier on retourne 406
+	if [ ! -f "$ressource" ]
+	then
+	 	status='406 Not Acceptable'
+		head_reponse "$status" "text/plain" "18"
+		printf "$status"
+	fi
+	#On affiche le contenu
+	status='200 OK'
+	tailleReponse=$(ls -l "$ressource" | cut -d " " -f5)
+	head_reponse "$status" "$contentType" "$tailleReponse"
+ 	cat "$ressource"
+fi
+
+#Si l'action est /html
+if [ "$testAction" = 'html' ]
+then
+	contentType=$(file --mime-type "$ressource" | cut -d ":" -f2)
+	extension=$(basename "$ressource" | cut -d "." -f2)
+
+	if [ "$extension" =  'csv' ]
+	then
+		status='200 OK'
+		tailleReponse=$(cat "$ressource"  | csv2html | wc -c)
+		head_reponse "$status" "text/html" "$tailleReponse"
+		cat "$ressource" | csv2html | remplace-dans "$cheminModele"
+	fi
+
+	if [ "$extension" = 'txt' ]
+	then
+		status='200 OK'
+		tailleReponse=$(cat "$ressource" | remplace-dans "$cheminModele" | wc -c)
+		head_reponse "$status" "text/html" "$tailleReponse"
+		cat "$ressource" | remplace-dans "$cheminModele"
+	fi
+
+	function liste () {
+
+	}
+
+	#Si la ressource est un dossier
+	if [ -d "$ressource" ]
+	then
+		status='200 OK'
+		tailleReponse=$()
+		#head_reponse "$status" "text/html" 
+		#printf "$status"
+	fi
+fi
