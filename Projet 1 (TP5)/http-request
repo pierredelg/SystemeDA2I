@@ -3,13 +3,10 @@
 if [ "$1" == '-h' ]
 then
     echo "HTTP Request - Permet de lire des lignes CSV sur son entrée standard et les transformer en fragment HTML ( <table> ),
-trié ou non, avant de les envoyer sur sa sortie standard
-Utilisation: csv2html [-d 〈caractere〉] [-s〈nombre〉] [-S 〈chaine〉]
+trié ou non, avant de les envoyer sur sa sortie standard.
+Utilisation: http-request [〈cheminRacine〉] [〈cheminModele〉]
 Résumé des commandes:
-    -d  〈caractere〉 spécifiant le caractere séparateur de champs
-    -h   aide
-    -s  〈nombre〉 le tableau est trié sur la colonne spécifiée par sa position
-    -S  〈chaine〉 le tableau est trié sur la colonne dont le titre est spécifié"
+    -h   aide"
     exit 0
 fi
 
@@ -216,6 +213,7 @@ then
 			dossier="$ressource"
 			for nom in "$dossier"/*
 			do
+				#On récupére l'extension du fichier
 				extension=$(echo -n "$nom" | tail -c 3)
 
 				if [ -d "$nom" ]
@@ -231,15 +229,15 @@ then
 					then
 						corps="$corps
 						<li><a href=\"/html/$(basename "$nom")\">$(basename "$nom")</a></li>"
-					fi
-
-					if [ "$extension" == 'txt' ]
-					then
-						corps="$corps
-						<li><a href=\"/html/$(basename "$nom")\">$(basename "$nom")</a></li>"
 					else
-						corps="$corps
-						<li><a href=\"contenu/$(basename "$nom")\">$(basename "$nom")</a></li>"
+						if [ "$extension" == 'txt' ]
+						then
+							corps="$corps
+							<li><a href=\"/html/$(basename "$nom")\">$(basename "$nom")</a></li>"
+						else
+							corps="$corps
+							<li><a href=\"/contenu/$(basename "$nom")\">$(basename "$nom")</a></li>"
+						fi
 					fi
 				fi
 

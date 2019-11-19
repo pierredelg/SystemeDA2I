@@ -1,6 +1,6 @@
-DELGRANGE Pierre
+#	DELGRANGE Pierre
 
-Ce qui fonctionne
+##	Ce qui fonctionne
 
 	- /contenu/〈 chemin 〉 	=> Le serveur permet de récupérer un fichier et retourne 406 si c'est un dossier
 
@@ -9,22 +9,27 @@ Ce qui fonctionne
 									- si c'est un ".txt" 	: une version html de son contenu
 									- si c'est un dossier 	: une version HTML de son contenu sous forme de liste de 
 															  liens permettant de naviguer dans les dossiers fils et  
-															  de récupérer le contenu si on clique sur un fichier.
+															  de récupérer la version html(pour les fichiers ".csv",
+															  ".txt",dossier) ou le contenu si on clique sur un 
+															  fichier.
+
+	- /html/ 〈 chemin 〉 /triepar/ 〈 nombre 〉	=> Si le 〈 chemin 〉est un fichier ".csv", le serveur envoie une version HTML de son contenu en triant sur la colonne numéro 〈 nombre 〉
+
+	- /html/ 〈 chemin 〉 /triepar/ 〈 nom 〉		=> Si le 〈 chemin 〉est un fichier ".csv", le serveur envoie une version HTML de son contenu en triant sur la colonne portant le label 〈nom〉
+
+	- La gestion des erreurs => - 405 lorsque la methode n'est pas GET
+								- 505 lorsque la version HTTP n'est pas HTTP/1.1
+								- 404 lorsque la cible n’est pas présente
+								- 406 lorsque la cible est non acceptable
 
 
-– de type /html/ pour les fichiers CSV, les fichiers texte et les répertoires
-– de type /contenu/ pour les autres fichiers
-– si 〈chemin〉 correspond à un autre type de fichier de 〈racine〉 le serveur considère la cible comme non acceptable ( 406 )
-– sinon le serveur avertit que la cible n’est pas présente ( 404 )
-/html/ 〈 chemin 〉 /triepar/ 〈 nombre 〉
-/html/ 〈 chemin 〉 /triepar/ 〈 nom 〉
-– si 〈chemin〉 correspond à un fichier CSV une version HTML de son contenu est renvoyée par le serveur en triant sur
-la colonne numéro 〈nombre〉 ou la colonne portant le label 〈nom〉. Si la colonne demandée est inexistante le serveur
-avertit que la cible n’est pas acceptable ( 406 )
-– si 〈chemin〉 correspond à un autre type de fichier de 〈racine〉 le serveur avertit que la cible n’est pas acceptable ( 406 )
-– sinon le serveur avertit que la cible n’est pas présente ( 404 )
-Toutes les autres cibles sont considérées par le serveur comme non acceptables ( 406 ).
 
-Ce qui ne fonctionne pas
-Ce qui n'a pas été fait
-tout ce que vous jugez utile de me préciser
+##	Ce qui ne fonctionne pas
+
+- j'ai une erreur que je ne comprends pas:
+	mkfifo: impossible de créer la FIFO '/tmp/requete': Le fichier existe
+
+
+## Remarque
+
+Je ne suis pas sur d'avoir bien utilisé les scripts, particulièrement get-request.

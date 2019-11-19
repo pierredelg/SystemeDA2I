@@ -3,7 +3,7 @@
 if [ "$1" == '-h' ]
 then
     echo "Csv to html - Permet de lire des lignes CSV sur son entrée standard et les transformer en fragment HTML ( <table> ),
-trié ou non, avant de les envoyer sur sa sortie standard
+trié ou non, avant de les envoyer sur sa sortie standard.
 Utilisation: csv2html [-d 〈caractere〉] [-s〈nombre〉] [-S 〈chaine〉]
 Résumé des commandes:
     -d  〈caractere〉 spécifiant le caractere séparateur de champs
