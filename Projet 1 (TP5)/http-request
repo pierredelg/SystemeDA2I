@@ -185,25 +185,43 @@ then
 			#On affiche le contenu du dossier dans une liste html
 			status='200 OK'
 
-			function liste () {
+			corps="<!doctype html><ul>"
+			dossier="$1"
+			for nom in "$dossier"/*
+			do
+				extension=$(echo -n "$nom" | tail -c 3)
 
-				corps="<!doctype html><ul>"
-				dossier="$1"
-				for nom in "$dossier"/*
-				do
-					type=$(file "$nom" | cut -d ':' -f2 | cut -d ' ' -f2)
+				if [ -d "$nom" ]
+				then
+					corps="$corps
+					<li><a href=\"http://localhost:8080/html/$(basename "$nom")\">$(basename "$nom")</a></li>"
 
-					if (( "$type" == 'directory' || "$type" == ' csv' || "$type" == 'txt' ))
+				fi
+
+				if [ -f "$nom" ]
+				then
+					if [ "$extension" == 'csv' ]
 					then
-						corps="$corps<li><a href=\"http://localhost:8080/html/$(basename "$nom")\">$(basename "$nom")</a></li>"
+						corps="$corps
+						<li><a href=\"http://localhost:8080/html/$(basename "$nom")\">$(basename "$nom")</a></li>"
 					fi
 
-				done
-				corps="$corps</ul>"
-			}
-			tailleReponse=$()
-			head_reponse_sans_taille "$status" "contentType" 
-			liste "$ressource"
+					if [ "$extension" == 'txt' ]
+					then
+						corps="$corps
+						<li><a href=\"http://localhost:8080/html/$(basename "$nom")\">$(basename "$nom")</a></li>"
+					else
+						corps="$corps
+						<li><a href=\"http://localhost:8080/contenu/$(basename "$nom")\">$(basename "$nom")</a></li>"
+					fi
+				fi
+
+			done
+			corps="$corps</ul>"
+	
+			tailleReponse=$(echo -n "$corps" | wc -c)
+			head_reponse "$status" "contentType" "$tailleReponse"
+			printf "%s" "$corps"
 		fi
 	fi
 fi
