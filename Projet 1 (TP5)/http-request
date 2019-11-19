@@ -1,0 +1,215 @@
+#!/bin/bash
+set -x
+
+#fonction affichant le head de la réponse
+#$1 => status
+#$2 => type mime
+#$3 => longueur du body de la réponse
+function head_reponse(){
+	printf "HTTP/1.1 %s\r\n" "$1"
+	printf "Content-type:%s ; charset=UTF-8\r\n" "$2"
+	printf "Content-length: %s\r\n" "$3"
+	printf "\r\n"
+}
+#fonction affichant le head de la réponse sans content lenght
+#$1 => status
+#$2 => type mime
+function head_reponse_sans_taille(){
+	printf "HTTP/1.1 %s\r\n" "$1"
+	printf "Content-type:%s ; charset=UTF-8\r\n" "$2"
+	printf "\r\n"
+}
+
+#Fonction permettant de retirer le \r d'une ligne
+function format( ) {
+	echo "$1" | tr -d '\r'
+}
+
+#On recupere le chemin de la racine des fichiers
+#et le chemin du modele HTML provenant du script http-server
+cheminRacine="$1"
+cheminModele="$2"
+
+#On lit la 1ere ligne
+read methode ressource version
+
+#On ignore la suite
+while read ligne
+do
+	ligne=$(format "$ligne")
+	if [ "$ligne" = "" ]
+	then
+		break;
+	fi
+done
+
+#On retire le \r de la version
+version=$(format "$version")
+
+#On récupere l'action (/contenu ou /html)
+testAction=$(echo "$ressource" | cut -d "/" -f2)
+
+#On vérifie si un trie est demandé avec la bonne url "/triepar"
+trie=$(echo "$ressource" | cut -d "/" -f4)
+
+#On récupere la valeur (numéro ou nom de colonne) pour le trie
+valeurTrie=$(echo "$ressource" | cut -d "/" -f5)
+
+#On récupere la ressource
+ressource=$(echo "$ressource" | cut -d "/" -f3)
+ressource="$cheminRacine/$ressource"
+
+contentType="text/plain"
+
+#On vérifie si la methode n'est pas GET
+if [ ! "$methode" = 'GET' ]
+	then
+		status="405 Method Not Allowed"
+		tailleReponse=$(echo -n "$status" | wc -c)
+		head_reponse "$status" "$contentType" "$tailleReponse"
+		printf "$status"
+fi
+		
+#On vérifie si la version ne correspond pas à la version 1 de HTTP
+if [ ! "$version" = 'HTTP/1.1' ]
+	then
+		status='505 HTTP Version Not Supported'
+		tailleReponse=$(echo -n "$status" | wc -c)
+		head_reponse "$status" "$contentType" "$tailleReponse"
+		printf "$status"
+fi
+
+#On vérifie si la ressource existe
+if [ ! -e "$ressource" ]
+then
+ 	status='404 Not Found'
+ 	tailleReponse=$(echo -n "$status" | wc -c)
+	head_reponse "$status" "$contentType" "$tailleReponse"
+	printf "$status"
+fi
+
+#On récupere le type mime du fichier
+contentType=$(file --mime-type "$ressource" | cut -d ":" -f1)
+
+#On vérifie si l'action est /contenu
+if [ "$testAction" = 'contenu' ]
+then
+	 #On vérifie si le fichier est un fichier régulier
+	if [ -f "$ressource" ]
+	then
+		#On affiche le contenu
+		status='200 OK'
+		tailleReponse=$(ls -l "$ressource" | cut -d " " -f5)
+		head_reponse "$status" "$contentType" "$tailleReponse"
+	 	cat "$ressource"
+ 	fi
+fi
+
+#On vérifie si l'action est /html
+if [ "$testAction" = 'html' ]
+then
+	#On récupere l'extension du fichier
+	extension=$(basename "$ressource" | cut -d "." -f2)
+
+	#On passe le content type à html
+	contentType="text/html"
+
+	#On vérifie si un trie est demandé
+	if [ "$trie" == "triepar" ]
+	then
+		#On vérifie si la valeur n'est pas nulle
+		if [ ! -z "$valeurTrie" ]
+		then
+			#On vérifie que le fichier est un fichier .csv
+			if [ "$extension" =  'csv' ]
+			then 
+				#On vérifie si la valeur est un nombre
+				if [ "$(echo -n "$valeurTrie" | grep "^[ [:digit:] ]*$")" ]
+				then
+					#Si lance le script csv2hmtl
+					cat "$ressource" | csv2html -s "$valeurTrie" 1>/dev/null 2>&1
+					#On récupere le retour
+					retour=$?
+					#Si le retour est différent de 1 le trie est possible 
+					if [ "$retour" != '1' ]
+					then
+						#On affiche le fichier trié par le numéro de colonne donné
+						status='200 OK'
+						tailleReponse=$(cat "$ressource" | csv2html -s "$valeurTrie" | wc -c)
+						head_reponse "$status" "contentType" "$tailleReponse"
+						cat "$ressource" | csv2html -s "$valeurTrie"
+					fi
+
+				else
+					#On lance le script csv2html
+					cat "$ressource" | csv2html -S "$valeurTrie" 1>/dev/null 2>&1
+					#On récupere le retour
+					retour=$?
+					#Si le retour est différent de 1 le trie est possible 
+					if [ "$retour" != '1' ]
+					then
+						#On affiche le fichier trié par le nom de colonne donné
+						status='200 OK'
+						tailleReponse=$(cat "$ressource" | csv2html -S "$valeurTrie" | wc -c)
+						head_reponse "$status" "contentType" "$tailleReponse"
+						cat "$ressource" | csv2html -S "$valeurTrie"
+					fi
+				fi
+			fi
+		fi
+	else
+
+		#Si le fichier est un .csv
+		if [ "$extension" =  'csv' ]
+		then
+			#On affiche son contenu dans une table html
+			status='200 OK'
+			tailleReponse=$(cat "$ressource"  | csv2html | remplace-dans "$cheminModele" | wc -c)
+			head_reponse "$status" "contentType" "$tailleReponse"
+			cat "$ressource" | csv2html | remplace-dans "$cheminModele"
+		fi
+
+		#Si le fichier est un .txt 
+		if [ "$extension" = 'txt' ]
+		then
+			#On affiche son contenu en remplaçant dans le modele html
+			status='200 OK'
+			tailleReponse=$(cat "$ressource" | remplace-dans "$cheminModele" | wc -c)
+			head_reponse "$status" "contentType" "$tailleReponse"
+			cat "$ressource" | remplace-dans "$cheminModele"
+		fi
+
+		#Si la ressource est un dossier
+		if [ -d "$ressource" ]
+		then
+			#On affiche le contenu du dossier dans une liste html
+			status='200 OK'
+
+			function liste () {
+
+				corps="<!doctype html><ul>"
+				dossier="$1"
+				for nom in "$dossier"/*
+				do
+					type=$(file "$nom" | cut -d ':' -f2 | cut -d ' ' -f2)
+
+					if (( "$type" == 'directory' || "$type" == ' csv' || "$type" == 'txt' ))
+					then
+						corps="$corps<li><a href=\"http://localhost:8080/html/$(basename "$nom")\">$(basename "$nom")</a></li>"
+					fi
+
+				done
+				corps="$corps</ul>"
+			}
+			tailleReponse=$()
+			head_reponse_sans_taille "$status" "contentType" 
+			liste "$ressource"
+		fi
+	fi
+fi
+
+#Si rien ne correspond aux vérifications on envoie une erreur 406
+status='406 Not Acceptable'
+tailleReponse=$(echo -n "$status" | wc -c)
+head_reponse "$status" "text/plain" "$tailleReponse"
+printf "$status"

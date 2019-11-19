@@ -18,5 +18,5 @@ mkfifo $tube
 
 while true
 do
-	cat "$tube" | process-request2 "$cheminRacine" "$cheminModele" | nc.openbsd -l 127.0.0.1 "$port" > "$tube"
+	cat "$tube" | http-request "$cheminRacine" "$cheminModele" | nc.openbsd -l 127.0.0.1 "$port" > "$tube"
 done
