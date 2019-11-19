@@ -1,0 +1,183 @@
+#!/bin/bash
+
+set -x
+
+cheminRacine="$1"
+cheminModele="$2"
+
+read methode ressource version
+
+line="test"
+
+while read line; do
+	if [ "$line" = $'\r' ]; then
+		break
+	fi
+done
+
+
+version="$(echo "${version}" | tr -d '\r')"
+
+if [ "$version" != 'HTTP/1.1' ]
+	then
+		printf "HTTP/1.1 505 HTTP Version Not Supported\r\n" 
+		exit 1
+fi
+
+if [ "$methode" != 'GET' ]
+	then 
+		printf "HTTP/1.1 405 Method Not Allowed\r\n"
+		exit 1
+fi
+
+cible="$(echo "${ressource}" | cut -d/ -f2)"
+chemin="$(echo "${ressource}" | cut -d/ -f3)"
+triepar="$(echo "${ressource}" | cut -d/ -f4)"
+valeur="$(echo "${ressource}" | cut -d/ -f5)"
+
+
+if [ ! -e "$chemin" ]
+	then     
+		mime_type="Content-type: text/html"
+		length="Content-length: 13"
+		printf "HTTP/1.1 404 Not Found\r\n%s\r\n%s\r\n\r\n404 Not found" "$mime_type" "$length"
+		exit 1
+fi
+
+if [ -z "$chemin" ]
+        then chemin="."
+fi        
+
+
+
+case $cible in  
+	"contenu") 
+		if [ -f "$chemin" ]
+			then
+				mime_type="Content-type: $(file --mime-type -b "$chemin" )"
+				length="Content-length: $(stat --printf "%s" "$chemin")"
+				printf "HTTP/1.1 200 OK\r\n%s\r\n%s\r\n\r\n" "$mime_type" "$length"
+				cat "$chemin"
+                echo salut 1>&2
+				exit 0
+		else 
+		        mime_type="Content-type: text/html"
+		        length="Content-length: 18"
+                printf "HTTP/1.1 406 Not Acceptable\r\n\r\n" "$mime_type" "$length"
+				exit 1		
+		fi
+			;;
+
+
+	"html") 
+           
+        extension="$(basename "$chemin" | cut -d. -f2)"
+		
+		if [ "$extension" = "csv" ]
+            then              
+
+			if [ "$triepar" == "triepar" ]
+				then
+					if [ "$(echo -n "$valeur" | grep "^[ [:digit:] ]*$")" ]
+						then
+							length=$(cat "$chemin" | csv2html -s "$valeur" | wc -c)
+							printf "HTTP/1.1 200 OK\r\n%s\r\n%s\r\n\r\n" "Content-type: text/html" "Content-length: $length"
+							cat "$chemin" | ./csv2html -s "$valeur" 
+						else
+							length=$(cat "$chemin" | csv2html -S "$valeur" | wc -c)
+							printf "HTTP/1.1 200 OK\r\n%s\r\n%s\r\n\r\n" "Content-type: text/html" "Content-length: $length"
+							cat "$chemin" | ./csv2html -S "$valeur" 
+					fi
+			else
+				length=$(cat "$chemin" | csv2html | wc -c)
+				printf "HTTP/1.1 200 OK\r\n%s\r\n%s\r\n\r\n" "Content-type: text/html" "Content-length: $length"
+                cat "$chemin" | ./csv2html
+		fi
+		exit 0   
+
+
+     
+       
+        elif [ "$extension" = "txt" ]
+            then
+                length=$(cat "$chemin" | remplaceDans "modele.html" | wc -c)
+			    printf "HTTP/1.1 200 OK\r\n%s\r\n%s\r\n\r\n" "Content-type: text/html" "Content-length: $length"
+                cat "$chemin" | remplaceDans "modele.html"
+                exit 0
+
+		elif [ "$triepar" == "triepar" ]
+			then
+				if [ "$(echo -n "$valeur" | grep "^[ [:digit:] ]*$")" ]
+				then
+					length=$(cat "$chemin" | csv2html -s "$valeur" | wc -c)
+					printf "HTTP/1.1 200 OK\r\n%s\r\n%s\r\n\r\n" "Content-type: text/html" "Content-length: $length"
+					cat "$chemin" | csv2html -s "$valeur" 1>/dev/null 2>&1
+				else
+					length=$(cat "$chemin" | csv2html -S "$valeur" | wc -c)
+					printf "HTTP/1.1 200 OK\r\n%s\r\n%s\r\n\r\n" "Content-type: text/html" "Content-length: $length"
+					cat "$chemin" | csv2html -S "$valeur" 1>/dev/null 2>&1
+				fi
+      
+        elif [ -d "$chemin" ]
+            then
+                for f in $chemin/*
+                do
+                    if test -d $f 
+                        then
+                            printf "<ul>"
+                            printf "$f"
+                            printf "</ul>"
+                    else
+                        printf "<li>%s</li>" "$(basename $f)"
+                    fi       
+                done
+
+        elif (( "$extension" != "txt" && "$extension" != "csv" )) 
+            then
+		        mime_type="Content-type: text/html"
+		        length="Content-length: 18"
+                printf "HTTP/1.1 406 Not Acceptable\r\n\r\n" "$mime_type" "$length"
+				exit 1		
+   
+        else 
+		    mime_type="Content-type: text/html"
+		    length="Content-length: 13"
+		    printf "HTTP/1.1 404 Not Found\r\n%s\r\n%s\r\n\r\n404 Not found" "$mime_type" "$length"
+		    echo "$chemin"
+            exit 1
+
+        fi    
+
+
+		#(cat $ressource | ./remplaceDans(chemin)) 
+		
+		
+	
+			;;
+	*) printf "HTTP/1.1 406 Not Acceptable\r\n"
+				exit 1;;
+esac 
+
+
+
+#Si la ressource est un dossier
+#if [ -d "$chemin" ]
+	#then
+ # 		status='403 Forbidden'
+ # 		tailleReponse='14'
+
+#Si la ressource est bien un fichier
+#elif [ -f "$resource" ]
+#	then
+  #		status='200 OK'
+ # 		tailleReponse='7'
+
+#fi
+
+
+
+
+
+
+
+

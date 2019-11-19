@@ -1,5 +1,18 @@
 #!/bin/bash
 
+if [ "$1" == '-h' ]
+then
+    echo "Csv to html - Permet de lire des lignes CSV sur son entrée standard et les transformer en fragment HTML ( <table> ),
+trié ou non, avant de les envoyer sur sa sortie standard
+Utilisation: csv2html [-d 〈caractere〉] [-s〈nombre〉] [-S 〈chaine〉]
+Résumé des commandes:
+    -d  〈caractere〉 spécifiant le caractere séparateur de champs
+    -h   aide
+    -s  〈nombre〉 le tableau est trié sur la colonne spécifiée par sa position
+    -S  〈chaine〉 le tableau est trié sur la colonne dont le titre est spécifié"
+    exit 0
+fi
+
 sep=";"
 
 read ligne

@@ -1,5 +1,4 @@
 #!/bin/bash
-set -x
 removeSlash(){
 	
 	longueur=$(echo "$1" | wc -c)
@@ -46,22 +45,19 @@ do
 done
 
 cheminRacine=$(removeSlash "$cheminRacine")
-echo "chemin racine = $cheminRacine"
 cheminModele=$(removeSlash "$cheminModele")
 
 #si la variable help n'est pas nulle on affiche l'aide
 if [ ! -z "$help" ]
 then
-	echo "HTTP-server for GET request
-Usage: http-server [-d destination] [-p port] [-t path]
-Command Summary:
-	-d 	Specify the path containing the files served
-	-h 	This help text
-	-p 	Specify listen port
-	-t 	Specify the location of the template used to generate the HTML pages"
+	echo "Server HTTP - Permet de lancer le serveur  
+Utilisation: http-server [-d 〈chemin〉] [-p〈port〉] [-t 〈chemin〉]
+Résumé des commandes:
+	-d 	〈chemin〉 spécifiant la 〈racine〉 contenant les fichiers servis
+	-h 	 aide
+	-p 	〈port〉 spécifiant le port d’écoute
+	-t 	〈chemin〉 spécifiant l’emplacement du modèle utilisé par générer les pages HTML"
 fi
 			
 #On appel le script get-request avec en parametre les options 
 get-request "$port" "$cheminRacine" "$cheminModele"
-
-

@@ -1,5 +1,17 @@
 #!/bin/bash
-set -x
+
+if [ "$1" == '-h' ]
+then
+    echo "HTTP Request - Permet de lire des lignes CSV sur son entrée standard et les transformer en fragment HTML ( <table> ),
+trié ou non, avant de les envoyer sur sa sortie standard
+Utilisation: csv2html [-d 〈caractere〉] [-s〈nombre〉] [-S 〈chaine〉]
+Résumé des commandes:
+    -d  〈caractere〉 spécifiant le caractere séparateur de champs
+    -h   aide
+    -s  〈nombre〉 le tableau est trié sur la colonne spécifiée par sa position
+    -S  〈chaine〉 le tableau est trié sur la colonne dont le titre est spécifié"
+    exit 0
+fi
 
 #fonction affichant le head de la réponse
 #$1 => status
@@ -9,14 +21,6 @@ function head_reponse(){
 	printf "HTTP/1.1 %s\r\n" "$1"
 	printf "Content-type:%s ; charset=UTF-8\r\n" "$2"
 	printf "Content-length: %s\r\n" "$3"
-	printf "\r\n"
-}
-#fonction affichant le head de la réponse sans content lenght
-#$1 => status
-#$2 => type mime
-function head_reponse_sans_taille(){
-	printf "HTTP/1.1 %s\r\n" "$1"
-	printf "Content-type:%s ; charset=UTF-8\r\n" "$2"
 	printf "\r\n"
 }
 
@@ -68,6 +72,8 @@ if [ ! "$methode" = 'GET' ]
 		tailleReponse=$(echo -n "$status" | wc -c)
 		head_reponse "$status" "$contentType" "$tailleReponse"
 		printf "$status"
+		echo "http-request : erreur : $ressource : $( echo $status | cut -d ' ' -f1) : $( echo $status | cut -d ' ' -f2-)">&2
+		exit 0
 fi
 		
 #On vérifie si la version ne correspond pas à la version 1 de HTTP
@@ -77,6 +83,8 @@ if [ ! "$version" = 'HTTP/1.1' ]
 		tailleReponse=$(echo -n "$status" | wc -c)
 		head_reponse "$status" "$contentType" "$tailleReponse"
 		printf "$status"
+		echo "http-request : erreur : $ressource : $( echo $status | cut -d ' ' -f1) : $( echo $status | cut -d ' ' -f2-)">&2
+		exit 0
 fi
 
 #On vérifie si la ressource existe
@@ -86,6 +94,8 @@ then
  	tailleReponse=$(echo -n "$status" | wc -c)
 	head_reponse "$status" "$contentType" "$tailleReponse"
 	printf "$status"
+	echo "http-request : erreur : $ressource : $( echo $status | cut -d ' ' -f1) : $( echo $status | cut -d ' ' -f2-)">&2
+	exit 0
 fi
 
 #On récupere le type mime du fichier
@@ -102,6 +112,8 @@ then
 		tailleReponse=$(ls -l "$ressource" | cut -d " " -f5)
 		head_reponse "$status" "$contentType" "$tailleReponse"
 	 	cat "$ressource"
+	 	echo "http-request : info : $ressource : $( echo $status | cut -d ' ' -f1) : $( echo $status | cut -d ' ' -f2-)">&2
+		exit 0
  	fi
 fi
 
@@ -138,6 +150,8 @@ then
 						tailleReponse=$(cat "$ressource" | csv2html -s "$valeurTrie" | wc -c)
 						head_reponse "$status" "contentType" "$tailleReponse"
 						cat "$ressource" | csv2html -s "$valeurTrie"
+						echo "http-request : info : $ressource : $( echo $status | cut -d ' ' -f1) : $( echo $status | cut -d ' ' -f2-)">&2
+						exit 0
 					fi
 
 				else
@@ -153,6 +167,8 @@ then
 						tailleReponse=$(cat "$ressource" | csv2html -S "$valeurTrie" | wc -c)
 						head_reponse "$status" "contentType" "$tailleReponse"
 						cat "$ressource" | csv2html -S "$valeurTrie"
+						echo "http-request : info : $ressource : $( echo $status | cut -d ' ' -f1) : $( echo $status | cut -d ' ' -f2-)">&2
+						exit 0
 					fi
 				fi
 			fi
@@ -167,6 +183,8 @@ then
 			tailleReponse=$(cat "$ressource"  | csv2html | remplace-dans "$cheminModele" | wc -c)
 			head_reponse "$status" "contentType" "$tailleReponse"
 			cat "$ressource" | csv2html | remplace-dans "$cheminModele"
+			echo "http-request : info : $ressource : $( echo $status | cut -d ' ' -f1) : $( echo $status | cut -d ' ' -f2-)">&2
+			exit 0
 		fi
 
 		#Si le fichier est un .txt 
@@ -177,6 +195,8 @@ then
 			tailleReponse=$(cat "$ressource" | remplace-dans "$cheminModele" | wc -c)
 			head_reponse "$status" "contentType" "$tailleReponse"
 			cat "$ressource" | remplace-dans "$cheminModele"
+			echo "http-request : info : $ressource : $( echo $status | cut -d ' ' -f1) : $( echo $status | cut -d ' ' -f2-)">&2
+			exit 0
 		fi
 
 		#Si la ressource est un dossier
@@ -185,8 +205,15 @@ then
 			#On affiche le contenu du dossier dans une liste html
 			status='200 OK'
 
-			corps="<!doctype html><ul>"
-			dossier="$1"
+			corps="<!doctype html>
+				<html lang="fr">
+					<head>
+					<meta charset="utf-8">
+					<title>Contenu de $ressource</title>
+					</head>
+					<body>
+						<ul>"
+			dossier="$ressource"
 			for nom in "$dossier"/*
 			do
 				extension=$(echo -n "$nom" | tail -c 3)
@@ -194,7 +221,7 @@ then
 				if [ -d "$nom" ]
 				then
 					corps="$corps
-					<li><a href=\"http://localhost:8080/html/$(basename "$nom")\">$(basename "$nom")</a></li>"
+					<li><a href=\"/html/$(basename "$nom")\">$(basename "$nom")</a></li>"
 
 				fi
 
@@ -203,16 +230,16 @@ then
 					if [ "$extension" == 'csv' ]
 					then
 						corps="$corps
-						<li><a href=\"http://localhost:8080/html/$(basename "$nom")\">$(basename "$nom")</a></li>"
+						<li><a href=\"/html/$(basename "$nom")\">$(basename "$nom")</a></li>"
 					fi
 
 					if [ "$extension" == 'txt' ]
 					then
 						corps="$corps
-						<li><a href=\"http://localhost:8080/html/$(basename "$nom")\">$(basename "$nom")</a></li>"
+						<li><a href=\"/html/$(basename "$nom")\">$(basename "$nom")</a></li>"
 					else
 						corps="$corps
-						<li><a href=\"http://localhost:8080/contenu/$(basename "$nom")\">$(basename "$nom")</a></li>"
+						<li><a href=\"contenu/$(basename "$nom")\">$(basename "$nom")</a></li>"
 					fi
 				fi
 
@@ -222,6 +249,8 @@ then
 			tailleReponse=$(echo -n "$corps" | wc -c)
 			head_reponse "$status" "contentType" "$tailleReponse"
 			printf "%s" "$corps"
+			echo "http-request : erreur : $ressource : $( echo $status | cut -d ' ' -f1) : $( echo $status | cut -d ' ' -f2-)">&2
+			exit 0
 		fi
 	fi
 fi
@@ -231,3 +260,5 @@ status='406 Not Acceptable'
 tailleReponse=$(echo -n "$status" | wc -c)
 head_reponse "$status" "text/plain" "$tailleReponse"
 printf "$status"
+echo "http-request : erreur : $ressource : $( echo $status | cut -d ' ' -f1) : $( echo $status | cut -d ' ' -f2-)">&2
+exit 0

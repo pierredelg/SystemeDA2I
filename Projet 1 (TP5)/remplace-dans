@@ -1,5 +1,17 @@
 #!/bin/bash
 
+if [ "$1" == '-h' ]
+then
+    echo "Remplace dans - Permet d’afficher le contenu d’un fichier (le « modèle ») dont une
+partie est remplacée par le contenu d’un autre fichier (le « corps »). Le modèle est un fichier dont le nom est passé en paramètre.
+Le corps est lu sur l’entrée standard.
+Utilisation: remplace-dans〈chaine〉
+Résumé des commandes:
+    -h   aide
+    "
+    exit 0
+fi
+
 modele="$1"
 debut="<!-- DEBUT -->"
 fin="<!-- FIN -->"
