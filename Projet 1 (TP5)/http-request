@@ -2,9 +2,9 @@
 
 if [ "$1" == '-h' ]
 then
-    echo "HTTP Request - Permet de lire des lignes CSV sur son entrée standard et les transformer en fragment HTML ( <table> ),
-trié ou non, avant de les envoyer sur sa sortie standard.
-Utilisation: http-request [〈cheminRacine〉] [〈cheminModele〉]
+    echo "HTTP Request - lit une requête HTTP sur son entrée standard et qui écrit une réponse adaptée sur sa sortie
+standard. Il faut indiquer le chemin de la racine ainsi que le chemin du modele HTML.
+Utilisation: http-request 〈cheminRacine〉〈cheminModele〉
 Résumé des commandes:
     -h   aide"
     exit 0
@@ -144,9 +144,9 @@ then
 					then
 						#On affiche le fichier trié par le numéro de colonne donné
 						status='200 OK'
-						tailleReponse=$(cat "$ressource" | csv2html -s "$valeurTrie" | wc -c)
+						tailleReponse=$(cat "$ressource" | csv2html -s "$valeurTrie" | remplace-dans "$cheminModele" | wc -c)
 						head_reponse "$status" "contentType" "$tailleReponse"
-						cat "$ressource" | csv2html -s "$valeurTrie"
+						cat "$ressource" | csv2html -s "$valeurTrie" | remplace-dans "$cheminModele"
 						echo "http-request : info : $ressource : $( echo $status | cut -d ' ' -f1) : $( echo $status | cut -d ' ' -f2-)">&2
 						exit 0
 					fi
@@ -161,9 +161,9 @@ then
 					then
 						#On affiche le fichier trié par le nom de colonne donné
 						status='200 OK'
-						tailleReponse=$(cat "$ressource" | csv2html -S "$valeurTrie" | wc -c)
+						tailleReponse=$(cat "$ressource" | csv2html -S "$valeurTrie" | remplace-dans "$cheminModele" | wc -c)
 						head_reponse "$status" "contentType" "$tailleReponse"
-						cat "$ressource" | csv2html -S "$valeurTrie"
+						cat "$ressource" | csv2html -S "$valeurTrie" | remplace-dans "$cheminModele"
 						echo "http-request : info : $ressource : $( echo $status | cut -d ' ' -f1) : $( echo $status | cut -d ' ' -f2-)">&2
 						exit 0
 					fi
@@ -216,13 +216,14 @@ then
 				#On récupére l'extension du fichier
 				extension=$(echo -n "$nom" | tail -c 3)
 
+				#Si le fichier est un dossier
 				if [ -d "$nom" ]
 				then
 					corps="$corps
 					<li><a href=\"/html/$(basename "$nom")\">$(basename "$nom")</a></li>"
 
 				fi
-
+				#Si le fichier existe
 				if [ -f "$nom" ]
 				then
 					if [ "$extension" == 'csv' ]
@@ -240,9 +241,11 @@ then
 						fi
 					fi
 				fi
-
 			done
-			corps="$corps</ul>"
+			corps="$corps
+					</ul>
+				</body>
+			</html>"
 	
 			tailleReponse=$(echo -n "$corps" | wc -c)
 			head_reponse "$status" "contentType" "$tailleReponse"

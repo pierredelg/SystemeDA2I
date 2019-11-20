@@ -1,0 +1,3 @@
+Salut
+mvn archetype:generate -DarchetypeArtifactId=maven-archetype-webapp
+-DgroupId=fr.da2i -DartifactId=tp08 -DinteractiveMode=false

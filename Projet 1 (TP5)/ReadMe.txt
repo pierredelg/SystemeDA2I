@@ -1,6 +1,6 @@
 #	DELGRANGE Pierre
 
-##	Ce qui fonctionne
+##	Ce qui fonctionne :
 
 	- /contenu/〈 chemin 〉 	=> Le serveur permet de récupérer un fichier et retourne 406 si c'est un dossier
 
@@ -23,13 +23,25 @@
 								- 406 lorsque la cible est non acceptable
 
 
+##	Ce qui ne fonctionne pas :
 
-##	Ce qui ne fonctionne pas
-
-- j'ai une erreur que je ne comprends pas:
+	- J'ai une erreur que je n'ai pas réussi à corriger:
 	mkfifo: impossible de créer la FIFO '/tmp/requete': Le fichier existe
 
+	(J'ai essayé de faire un rm /tmp/requete mais lorsque le fichier n'existe pas j'ai l'erreur inverse)
 
-## Remarque
 
-Je ne suis pas sur d'avoir bien utilisé les scripts, particulièrement get-request.
+## Remarque :
+
+	Je ne suis pas sur d'avoir bien utilisé l'imbrication les scripts, particulièrement get-request.
+	En fait, j'ai modifié le fichier get-request afin de pouvoir changer le chemin de la racine, le chemin du modele et le port.
+	De ce fait, je ne suis pas sur que cela respecte votre script de test.
+
+
+## Déroulement du script :
+
+	Le script pour lancer le serveur est http-server dans lequel il est possible d'ajouter les parametres (le chemin de la racine, le chemin du modele et le port).
+
+	Le script http-server appelle le script get-request en lui passant en parametre le chemin de la racine, le chemin du modele et le port.
+	
+	Ensuite le script get-request appelle le script http-request en lui passant en parametre le chemin de la racine et le chemin du modele.
