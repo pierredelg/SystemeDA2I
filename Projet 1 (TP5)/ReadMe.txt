@@ -31,13 +31,6 @@
 	(J'ai essayé de faire un rm /tmp/requete mais lorsque le fichier n'existe pas j'ai l'erreur inverse)
 
 
-## Remarque :
-
-	Je ne suis pas sur d'avoir bien utilisé l'imbrication les scripts, particulièrement get-request.
-	En fait, j'ai modifié le fichier get-request afin de pouvoir changer le chemin de la racine, le chemin du modele et le port.
-	De ce fait, je ne suis pas sur que cela respecte votre script de test.
-
-
 ## Déroulement du script :
 
 	Le script pour lancer le serveur est http-server dans lequel il est possible d'ajouter les parametres (le chemin de la racine, le chemin du modele et le port).
